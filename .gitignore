@@ -23,6 +23,10 @@ bld/
 [Oo]bj/
 /dist/
 
+/publish/*
+!/publish/Gruntfile.js
+!/publish/package.json
+
 # NuGet packages
 /ext/
 
@@ -145,9 +149,6 @@ DocProject/Help/*.hhk
 DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
-
-# Click-Once directory
-publish/
 
 # Publish Web Output
 *.[Pp]ublish.xml
