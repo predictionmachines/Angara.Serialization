@@ -1,5 +1,6 @@
 {
     "name": "Angara.SerializationJS",
+    "main": [ "Angara.Serialization.umd.js" ],
     "version": "0.1.1",
     "authors": [ "Microsoft Research" ],
     "private": false,
@@ -12,6 +13,7 @@
         "sln",
         "src",
         "test",
+        "publish",
         "Gruntfile.js",
         "package.json",
         "LICENSE",
