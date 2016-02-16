@@ -1,7 +1,8 @@
 ﻿/// <binding />
 module.exports = function (grunt) {
 
-    grunt.initConfig({       
+    grunt.initConfig({     
+        clean: ["./*.nupkg" ],
         nugetrestore: {
             all: {
                 src: ['../src/Angara.Serialization.Json/packages.config'],
@@ -14,12 +15,13 @@ module.exports = function (grunt) {
         },
         nugetpush: {
             all: {
-               src: 'packages/*.nupkg' 
+               src: '*.nupkg' 
             }
         }
     });
 
     grunt.loadNpmTasks('grunt-nuget');
+    grunt.loadNpmTasks('grunt-contrib-clean');
         
     // Bug in current grunt-nuget doesn't allow to build .fsproj
     grunt.registerMultiTask('nugetPackFS', 'Create nuget package from .fsproj', function() {
@@ -36,10 +38,12 @@ module.exports = function (grunt) {
  
                //specify where we want the package to be created
                "-OutputDirectory",
-               "packages",
+               ".",
  
                "-Build",
-               "-IncludeReferencedProjects"
+               "-IncludeReferencedProjects",
+               "-Prop",
+               "Configuration=Release"
            ] 
         }, function (error, result) {
             //output either result text or error message...
@@ -51,5 +55,5 @@ module.exports = function (grunt) {
             done();
         });
     });
-    grunt.registerTask('default', ['nugetrestore', 'nugetPackFS','nugetpush']);
+    grunt.registerTask('default', ['clean','nugetrestore', 'nugetPackFS','nugetpush']);
 };

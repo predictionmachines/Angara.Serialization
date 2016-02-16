@@ -7,7 +7,9 @@
     <authors>$author$</authors>
     <owners>$author$</owners>
     <description>$description$</description>
-    <copyright>Copyright 2015</copyright>
+    <copyright>$copyright$</copyright>
     <tags>serialization deserialization</tags>
+    <licenseUrl>https://github.com/Microsoft/Angara.Serialization/blob/master/LICENSE</licenseUrl> 
+    <projectUrl>https://github.com/Microsoft/Angara.Serialization</projectUrl> 
   </metadata>
 </package>
