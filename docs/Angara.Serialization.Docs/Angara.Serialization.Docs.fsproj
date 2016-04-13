@@ -54,7 +54,7 @@
     <None Include="serialization.fsx" />
     <Content Include="packages.config" />
     <None Include="generate.fsx" />
-    <None Include="custom.fsx" />
+    <None Include="CustomSerializer.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib">

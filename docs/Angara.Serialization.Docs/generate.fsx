@@ -43,7 +43,8 @@ printfn "Current directory is %s" (Directory.GetCurrentDirectory())
 
 let fsi = FsiEvaluator()
 for f in 
-    [ src "serialization.fsx" ] 
+    [ src "serialization.fsx" 
+    ; src "CustomSerializer.fsx" ] 
     do
     if File.Exists f then
         printfn "Processing %s" (Path.GetFullPath(f))
