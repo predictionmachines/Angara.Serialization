@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Building serializer for a user type
+</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A library that facilitates serialization on both .NET and JavaScript platforms and communication between them">
+    <meta name="author" content="Microsoft Research">
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <link type="text/css" rel="stylesheet" href="./content/style.css" />
+    <script type="text/javascript" src="./content/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right"> 
+            <!--li><a href="http://predictionmachines.github.io/Angara">Angara</a></li--> 
+            <li><a href="https://github.com/Microsoft/Angara.Serialization">github page</a></li> 
+        </ul>
+        <h3 class="muted"><a href="./index.html">Angara.Serialization</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+<h1>Building serializer for a user type</h1>
+<p>This tutorial describes how to create and use serializer for user defined type.
+We need to introduce some concepts first.</p>
+<h3>InfoSet</h3>
+<p>InfoSet is an intermediate representation of objects being serialized. InfoSet is a tree-based data structure that
+uses limited set of .NET types. Purpose of InfoSet is to decouple serialization format from object graph traversing.
+InfoSets are represented by instances of <code>Angara.Serialization.InfoSet</code> discriminated union. Here are some examples
+how to create InfoSets for primitive types</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="i">i1</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span class="i">Int</span> <span class="n">1</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="i">i2</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="i">String</span> <span class="s">&quot;Hello, World!&quot;</span>
+</code></pre>
+<p>InfoSets can store arrays of primitive types and sequences of InfoSets</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="i">i3</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span class="i">UInt64Array</span> [| <span class="n">0UL</span>; <span class="n">1UL</span>; <span class="n">9223372036854775807UL</span> |]
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="i">i4</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="i">Seq</span> [ <span onmouseout="hideTip(event, 'fs1', 7)" onmouseover="showTip(event, 'fs1', 7)" class="i">i1</span>; <span onmouseout="hideTip(event, 'fs2', 8)" onmouseover="showTip(event, 'fs2', 8)" class="i">i2</span>; <span onmouseout="hideTip(event, 'fs4', 9)" onmouseover="showTip(event, 'fs4', 9)" class="i">i3</span> ]
+</code></pre>
+<p>InfoSets can store dictionaries of InfoSets</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs7', 10)" onmouseover="showTip(event, 'fs7', 10)" class="i">i5</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs8', 11)" onmouseover="showTip(event, 'fs8', 11)" class="i">Map</span>(<span onmouseout="hideTip(event, 'fs8', 12)" onmouseover="showTip(event, 'fs8', 12)" class="i">Map</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs9', 13)" onmouseover="showTip(event, 'fs9', 13)" class="i">empty</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs10', 14)" onmouseover="showTip(event, 'fs10', 14)" class="i">string</span>, <span class="i">InfoSet</span><span class="o">&gt;</span><span class="o">.</span><span class="i">Add</span>(<span class="s">&quot;intValue&quot;</span>, <span onmouseout="hideTip(event, 'fs1', 15)" onmouseover="showTip(event, 'fs1', 15)" class="i">i1</span>)<span class="o">.</span><span class="i">Add</span>(<span class="s">&quot;sequence&quot;</span>, <span onmouseout="hideTip(event, 'fs5', 16)" onmouseover="showTip(event, 'fs5', 16)" class="i">i4</span>))
+</code></pre>
+<p>The same InfoSet can be constructed with less code using shortcut methods</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs11', 17)" onmouseover="showTip(event, 'fs11', 17)" class="i">i5&#39;</span> <span class="o">=</span> <span class="i">InfoSet</span><span class="o">.</span><span class="i">EmptyMap</span><span class="o">.</span><span class="i">AddInt</span>(<span class="s">&quot;intValue&quot;</span>, <span class="n">1</span>)<span class="o">.</span><span class="i">AddSeq</span>(<span class="s">&quot;sequence&quot;</span>, [ <span onmouseout="hideTip(event, 'fs1', 18)" onmouseover="showTip(event, 'fs1', 18)" class="i">i1</span>; <span onmouseout="hideTip(event, 'fs2', 19)" onmouseover="showTip(event, 'fs2', 19)" class="i">i2</span>; <span onmouseout="hideTip(event, 'fs4', 20)" onmouseover="showTip(event, 'fs4', 20)" class="i">i3</span> ]) 
+</code></pre>
+<p>Serialization is actually performed in two steps. On the first step object is converted to InfoSet using
+<code>ArtefactSerializer.Serialize</code> method as shown in the next code snippet</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="prep">#r</span> <span class="s">&quot;Angara.Serialization.dll&quot;</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs12', 21)" onmouseover="showTip(event, 'fs12', 21)" class="i">Angara</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs13', 22)" onmouseover="showTip(event, 'fs13', 22)" class="i">Serialization</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="i">a</span> <span class="o">=</span> [| <span class="k">for</span> <span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="i">i</span> <span class="k">in</span> <span class="n">0..</span><span class="n">100</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 25)" onmouseover="showTip(event, 'fs15', 25)" class="i">i</span><span class="o">*</span><span onmouseout="hideTip(event, 'fs15', 26)" onmouseover="showTip(event, 'fs15', 26)" class="i">i</span> |] <span class="c">// An object to serialize</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs16', 27)" onmouseover="showTip(event, 'fs16', 27)" class="i">infoSet</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs14', 28)" onmouseover="showTip(event, 'fs14', 28)" class="i">a</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs17', 29)" onmouseover="showTip(event, 'fs17', 29)" class="t">ArtefactSerializer</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs18', 30)" onmouseover="showTip(event, 'fs18', 30)" class="f">Serialize</span> <span onmouseout="hideTip(event, 'fs19', 31)" onmouseover="showTip(event, 'fs19', 31)" class="t">CoreSerializerResolver</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 32)" onmouseover="showTip(event, 'fs20', 32)" class="i">Instance</span>
+</code></pre>
+<p>Then InfoSet is converted to serialized representation. <code>Angara.Serialization.Json</code> class
+provides support for JSON representation. Method <code>Marshal</code> converts InfoSet to JSON. Second
+parameter is related to blob support and can be set to None for now. Blobs will be discussed in
+a separate tutorial.</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="prep">#r</span> <span class="s">&quot;Angara.Serialization.Json.dll&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs21', 33)" onmouseover="showTip(event, 'fs21', 33)" class="i">json</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 34)" onmouseover="showTip(event, 'fs22', 34)" class="t">Json</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs23', 35)" onmouseover="showTip(event, 'fs23', 35)" class="f">Marshal</span>(<span onmouseout="hideTip(event, 'fs16', 36)" onmouseover="showTip(event, 'fs16', 36)" class="i">infoSet</span>, <span onmouseout="hideTip(event, 'fs24', 37)" onmouseover="showTip(event, 'fs24', 37)" class="p">None</span>)
+</code></pre>
+<p>Deserialization is performed in reverse order. Serialized format is parsed into InfoSet by `Unmarshal' method,
+then InfoSet is converted to CLR object</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs25', 38)" onmouseover="showTip(event, 'fs25', 38)" class="i">infoSet&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 39)" onmouseover="showTip(event, 'fs22', 39)" class="t">Json</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs26', 40)" onmouseover="showTip(event, 'fs26', 40)" class="f">Unmarshal</span>(<span onmouseout="hideTip(event, 'fs21', 41)" onmouseover="showTip(event, 'fs21', 41)" class="i">json</span>, <span onmouseout="hideTip(event, 'fs24', 42)" onmouseover="showTip(event, 'fs24', 42)" class="p">None</span>)
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs27', 43)" onmouseover="showTip(event, 'fs27', 43)" class="i">a&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs16', 44)" onmouseover="showTip(event, 'fs16', 44)" class="i">infoSet</span> <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs17', 45)" onmouseover="showTip(event, 'fs17', 45)" class="t">ArtefactSerializer</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs28', 46)" onmouseover="showTip(event, 'fs28', 46)" class="f">Deserialize</span> <span onmouseout="hideTip(event, 'fs19', 47)" onmouseover="showTip(event, 'fs19', 47)" class="t">CoreSerializerResolver</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 48)" onmouseover="showTip(event, 'fs20', 48)" class="i">Instance</span>
+</code></pre>
+<p><code>FromObject</code> and <code>ToObject</code> methods of <code>Json</code> class are convenient shortcuts that combine
+these two steps. Code snippet above can be rewrited in one line</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs29', 49)" onmouseover="showTip(event, 'fs29', 49)" class="i">a&#39;&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 50)" onmouseover="showTip(event, 'fs22', 50)" class="t">Json</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 51)" onmouseover="showTip(event, 'fs30', 51)" class="f">ToObject</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs31', 52)" onmouseover="showTip(event, 'fs31', 52)" class="t">obj</span><span class="o">&gt;</span>(<span onmouseout="hideTip(event, 'fs21', 53)" onmouseover="showTip(event, 'fs21', 53)" class="i">json</span>, <span onmouseout="hideTip(event, 'fs19', 54)" onmouseover="showTip(event, 'fs19', 54)" class="t">CoreSerializerResolver</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs20', 55)" onmouseover="showTip(event, 'fs20', 55)" class="i">Instance</span>)
+</code></pre>
+<h3>Type IDs</h3>
+<p>The serialization library uses textual identifier (TypeID) to differentiate types of objects in the
+serialized representation. Primary benefit of this approach is independence of serialized
+representation of .NET platform. Also TypeIDs can be chosen to be shorter than .NET full type
+names especially in case of generic types.</p>
+<h3>Resolvers</h3>
+<p>Serialization process needs to know TypeID and function that converts object to InfoSets for each type being serialized.
+Deserialization process need to know CLR type and function to convert InfoSets to object for each Type ID found in serialized
+representation. Two way mapping of CLR types and TypeIDs with converter functions is a reponsibility of resolvers -
+objects that implement <code>Angara.Serialization.ISerializerResolver</code> interface.</p>
+<p>Serialization library came with built-in resolver for primitives, arrays, F# lists, tuples and optional types.
+It is available as singleton by <code>Angara.Serialization.CoreSerializerResolver.Instance</code> property.</p>
+<h3>Creating custom serializer</h3>
+<p>Let's build serializer for <code>Vector2d</code> type</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs32', 56)" onmouseover="showTip(event, 'fs32', 56)" class="t">Vector2d</span> <span class="o">=</span> { <span onmouseout="hideTip(event, 'fs33', 57)" onmouseover="showTip(event, 'fs33', 57)" class="i">x</span><span class="o">:</span> <span onmouseout="hideTip(event, 'fs34', 58)" onmouseover="showTip(event, 'fs34', 58)" class="t">int</span>; <span onmouseout="hideTip(event, 'fs35', 59)" onmouseover="showTip(event, 'fs35', 59)" class="i">y</span><span class="o">:</span> <span onmouseout="hideTip(event, 'fs34', 60)" onmouseover="showTip(event, 'fs34', 60)" class="t">int</span> }
+</code></pre>
+<p>We need to define TypeID, serializer function that converts instances of Vector2d to InfoSet and deserializer function
+that converts InfoSets to Vector2d instances. This is done by creating serializer type - a type that implements
+<code>Angara.Serialization.ISerializer&lt;Vector2d&gt;</code> interface</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs36', 61)" onmouseover="showTip(event, 'fs36', 61)" class="t">Vector2dSerializer</span> () <span class="o">=</span>
+    <span class="k">interface</span> <span onmouseout="hideTip(event, 'fs37', 62)" onmouseover="showTip(event, 'fs37', 62)" class="t">ISerializer</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs32', 63)" onmouseover="showTip(event, 'fs32', 63)" class="t">Vector2d</span><span class="o">&gt;</span> <span class="k">with</span>
+        <span class="k">member</span> <span onmouseout="hideTip(event, 'fs38', 64)" onmouseover="showTip(event, 'fs38', 64)" class="i">x</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs39', 65)" onmouseover="showTip(event, 'fs39', 65)" class="i">TypeId</span> <span class="o">=</span> <span class="s">&quot;V2D&quot;</span> <span class="c">// This is Type ID for Vector2d type</span>
+        <span class="k">member</span> <span onmouseout="hideTip(event, 'fs38', 66)" onmouseover="showTip(event, 'fs38', 66)" class="i">x</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs40', 67)" onmouseover="showTip(event, 'fs40', 67)" class="f">Serialize</span> _ <span onmouseout="hideTip(event, 'fs41', 68)" onmouseover="showTip(event, 'fs41', 68)" class="i">v</span> <span class="o">=</span> 
+            <span onmouseout="hideTip(event, 'fs42', 69)" onmouseover="showTip(event, 'fs42', 69)" class="t">InfoSet</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs43', 70)" onmouseover="showTip(event, 'fs43', 70)" class="i">EmptyMap</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs44', 71)" onmouseover="showTip(event, 'fs44', 71)" class="f">AddInt</span>(<span class="s">&quot;x&quot;</span>, <span onmouseout="hideTip(event, 'fs41', 72)" onmouseover="showTip(event, 'fs41', 72)" class="i">v</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs33', 73)" onmouseover="showTip(event, 'fs33', 73)" class="i">x</span>)<span class="o">.</span><span class="f">AddInt</span>(<span class="s">&quot;y&quot;</span>, <span onmouseout="hideTip(event, 'fs41', 74)" onmouseover="showTip(event, 'fs41', 74)" class="i">v</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs35', 75)" onmouseover="showTip(event, 'fs35', 75)" class="i">y</span>)
+        <span class="k">member</span> <span onmouseout="hideTip(event, 'fs38', 76)" onmouseover="showTip(event, 'fs38', 76)" class="i">x</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs45', 77)" onmouseover="showTip(event, 'fs45', 77)" class="f">Deserialize</span> _ <span onmouseout="hideTip(event, 'fs46', 78)" onmouseover="showTip(event, 'fs46', 78)" class="i">i</span> <span class="o">=</span> 
+            <span class="k">let</span> <span onmouseout="hideTip(event, 'fs47', 79)" onmouseover="showTip(event, 'fs47', 79)" class="i">map</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs42', 80)" onmouseover="showTip(event, 'fs42', 80)" class="t">InfoSet</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs48', 81)" onmouseover="showTip(event, 'fs48', 81)" class="f">toMap</span> <span onmouseout="hideTip(event, 'fs46', 82)" onmouseover="showTip(event, 'fs46', 82)" class="i">i</span> <span class="k">in</span> { <span onmouseout="hideTip(event, 'fs33', 83)" onmouseover="showTip(event, 'fs33', 83)" class="i">x</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs47', 84)" onmouseover="showTip(event, 'fs47', 84)" class="i">map</span><span class="o">.</span>[<span class="s">&quot;x&quot;</span>]<span class="o">.</span><span class="f">ToInt</span>(); <span onmouseout="hideTip(event, 'fs35', 85)" onmouseover="showTip(event, 'fs35', 85)" class="i">y</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs47', 86)" onmouseover="showTip(event, 'fs47', 86)" class="i">map</span><span class="o">.</span>[<span class="s">&quot;y&quot;</span>]<span class="o">.</span><span class="f">ToInt</span>() } 
+</code></pre>
+<p>Design of <code>Angara.Serialization</code> library separates serialization responsibility from other responsibilities of an object.
+This allows us to make any object serializable without modifying its code or creating adapter types. However this means that
+we need to let serialization infrastructure know about our custom serializers.</p>
+<p>To do this we can create SerializerLibrary - a resolver that is extensible with custom serializers.
+<code>SerializerLibrary.CreateDefault</code> method creates resolver that knows about all types supported by <code>CoreInstanceResolver</code>
+and allows to register serializers for user defined type.</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs49', 87)" onmouseover="showTip(event, 'fs49', 87)" class="i">lib</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs50', 88)" onmouseover="showTip(event, 'fs50', 88)" class="t">SerializerLibrary</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs51', 89)" onmouseover="showTip(event, 'fs51', 89)" class="f">CreateDefault</span>()
+<span onmouseout="hideTip(event, 'fs49', 90)" onmouseover="showTip(event, 'fs49', 90)" class="i">lib</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs52', 91)" onmouseover="showTip(event, 'fs52', 91)" class="f">Register</span>(<span onmouseout="hideTip(event, 'fs36', 92)" onmouseover="showTip(event, 'fs36', 92)" class="t">Vector2dSerializer</span>())
+</code></pre>
+<p>Then we pass our custom library to serialization infrastructure when performing serialization or deserialization</p>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">let</span> <span onmouseout="hideTip(event, 'fs53', 93)" onmouseover="showTip(event, 'fs53', 93)" class="i">v</span> <span class="o">=</span> { <span onmouseout="hideTip(event, 'fs33', 94)" onmouseover="showTip(event, 'fs33', 94)" class="i">x</span> <span class="o">=</span> <span class="o">-</span><span class="n">1</span>; <span onmouseout="hideTip(event, 'fs35', 95)" onmouseover="showTip(event, 'fs35', 95)" class="i">y</span> <span class="o">=</span> <span class="n">10</span> }
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs54', 96)" onmouseover="showTip(event, 'fs54', 96)" class="i">vjson</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 97)" onmouseover="showTip(event, 'fs22', 97)" class="t">Json</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs55', 98)" onmouseover="showTip(event, 'fs55', 98)" class="f">FromObject</span>(<span onmouseout="hideTip(event, 'fs49', 99)" onmouseover="showTip(event, 'fs49', 99)" class="i">lib</span>, <span onmouseout="hideTip(event, 'fs53', 100)" onmouseover="showTip(event, 'fs53', 100)" class="i">v</span>)
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs56', 101)" onmouseover="showTip(event, 'fs56', 101)" class="i">v&#39;</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 102)" onmouseover="showTip(event, 'fs22', 102)" class="t">Json</span><span class="o">.</span><span onmouseout="hideTip(event, 'fs30', 103)" onmouseover="showTip(event, 'fs30', 103)" class="f">ToObject</span><span class="o">&lt;</span><span onmouseout="hideTip(event, 'fs32', 104)" onmouseover="showTip(event, 'fs32', 104)" class="t">Vector2d</span><span class="o">&gt;</span>(<span onmouseout="hideTip(event, 'fs54', 105)" onmouseover="showTip(event, 'fs54', 105)" class="i">vjson</span>, <span onmouseout="hideTip(event, 'fs49', 106)" onmouseover="showTip(event, 'fs49', 106)" class="i">lib</span>)
+</code></pre>
+<p>Notice <code>V2D</code> TypeID in the generated JSON representation</p>
+<table class="pre"><tr><td><pre><code>"{
+  ":V2D": {
+    "x:int": -1,
+    "y:int": 10
+  }
+}"</code></pre></td></tr></table>
+
+<div class="tip" id="fs1">val i1 : obj<br /><br />Full name: CustomSerializer.i1</div>
+<div class="tip" id="fs2">val i2 : obj<br /><br />Full name: CustomSerializer.i2</div>
+<div class="tip" id="fs3">module String<br /><br />from Microsoft.FSharp.Core</div>
+<div class="tip" id="fs4">val i3 : obj<br /><br />Full name: CustomSerializer.i3</div>
+<div class="tip" id="fs5">val i4 : obj<br /><br />Full name: CustomSerializer.i4</div>
+<div class="tip" id="fs6">module Seq<br /><br />from Microsoft.FSharp.Collections</div>
+<div class="tip" id="fs7">val i5 : obj<br /><br />Full name: CustomSerializer.i5</div>
+<div class="tip" id="fs8">Multiple items<br />module Map<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type Map&lt;&#39;Key,&#39;Value (requires comparison)&gt; =<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IComparable<br />&#160;&#160;interface IEnumerable&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;<br />&#160;&#160;interface ICollection&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;<br />&#160;&#160;interface IDictionary&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;member Add : key:&#39;Key * value:&#39;Value -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;member ContainsKey : key:&#39;Key -&gt; bool<br />&#160;&#160;override Equals : obj -&gt; bool<br />&#160;&#160;member Remove : key:&#39;Key -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;...<br /><br />Full name: Microsoft.FSharp.Collections.Map&lt;_,_&gt;<br /><br />--------------------<br />new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;</div>
+<div class="tip" id="fs9">val empty&lt;&#39;Key,&#39;T (requires comparison)&gt; : Map&lt;&#39;Key,&#39;T&gt; (requires comparison)<br /><br />Full name: Microsoft.FSharp.Collections.Map.empty</div>
+<div class="tip" id="fs10">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />Full name: Microsoft.FSharp.Core.Operators.string<br /><br />--------------------<br />type string = System.String<br /><br />Full name: Microsoft.FSharp.Core.string</div>
+<div class="tip" id="fs11">val i5&#39; : obj<br /><br />Full name: CustomSerializer.i5&#39;</div>
+<div class="tip" id="fs12">namespace Angara</div>
+<div class="tip" id="fs13">namespace Angara.Serialization</div>
+<div class="tip" id="fs14">val a : int []<br /><br />Full name: CustomSerializer.a</div>
+<div class="tip" id="fs15">val i : int</div>
+<div class="tip" id="fs16">val infoSet : InfoSet<br /><br />Full name: CustomSerializer.infoSet</div>
+<div class="tip" id="fs17">module ArtefactSerializer<br /><br />from Angara.Serialization</div>
+<div class="tip" id="fs18">val Serialize : res:ISerializerResolver -&gt; a:obj -&gt; InfoSet<br /><br />Full name: Angara.Serialization.ArtefactSerializer.Serialize</div>
+<div class="tip" id="fs19">type CoreSerializerResolver =<br />&#160;&#160;interface ISerializerResolver<br />&#160;&#160;private new : unit -&gt; CoreSerializerResolver<br />&#160;&#160;static member Instance : CoreSerializerResolver<br /><br />Full name: Angara.Serialization.CoreSerializerResolver</div>
+<div class="tip" id="fs20">property CoreSerializerResolver.Instance: CoreSerializerResolver</div>
+<div class="tip" id="fs21">val json : Newtonsoft.Json.Linq.JToken<br /><br />Full name: CustomSerializer.json</div>
+<div class="tip" id="fs22">type Json =<br />&#160;&#160;private new : unit -&gt; Json<br />&#160;&#160;static member FromObject : resolver:ISerializerResolver * a:&#39;a0 -&gt; JToken<br />&#160;&#160;static member FromObject : resolver:ISerializerResolver * a:&#39;a0 * writer:IBlobWriter -&gt; JToken<br />&#160;&#160;static member Marshal : infoSet:InfoSet * writer:IBlobWriter option -&gt; JToken<br />&#160;&#160;static member ToObject : json:JToken * resolver:ISerializerResolver -&gt; &#39;t<br />&#160;&#160;static member ToObject : json:JToken * resolver:ISerializerResolver * reader:IBlobReader -&gt; &#39;t<br />&#160;&#160;static member Unmarshal : token:JToken * reader:IBlobReader option -&gt; InfoSet<br /><br />Full name: Angara.Serialization.Json</div>
+<div class="tip" id="fs23">static member Json.Marshal : infoSet:InfoSet * writer:IBlobWriter option -&gt; Newtonsoft.Json.Linq.JToken</div>
+<div class="tip" id="fs24">union case Option.None: Option&lt;&#39;T&gt;</div>
+<div class="tip" id="fs25">val infoSet&#39; : InfoSet<br /><br />Full name: CustomSerializer.infoSet&#39;</div>
+<div class="tip" id="fs26">static member Json.Unmarshal : token:Newtonsoft.Json.Linq.JToken * reader:IBlobReader option -&gt; InfoSet</div>
+<div class="tip" id="fs27">val a&#39; : obj<br /><br />Full name: CustomSerializer.a&#39;</div>
+<div class="tip" id="fs28">val Deserialize : res:ISerializerResolver -&gt; i:InfoSet -&gt; obj<br /><br />Full name: Angara.Serialization.ArtefactSerializer.Deserialize</div>
+<div class="tip" id="fs29">val a&#39;&#39; : obj<br /><br />Full name: CustomSerializer.a&#39;&#39;</div>
+<div class="tip" id="fs30">static member Json.ToObject : json:Newtonsoft.Json.Linq.JToken * resolver:ISerializerResolver -&gt; &#39;t<br />static member Json.ToObject : json:Newtonsoft.Json.Linq.JToken * resolver:ISerializerResolver * reader:IBlobReader -&gt; &#39;t</div>
+<div class="tip" id="fs31">type obj = System.Object<br /><br />Full name: Microsoft.FSharp.Core.obj</div>
+<div class="tip" id="fs32">type Vector2d =<br />&#160;&#160;{x: int;<br />&#160;&#160;&#160;y: int;}<br /><br />Full name: CustomSerializer.Vector2d</div>
+<div class="tip" id="fs33">Vector2d.x: int</div>
+<div class="tip" id="fs34">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />Full name: Microsoft.FSharp.Core.Operators.int<br /><br />--------------------<br />type int = int32<br /><br />Full name: Microsoft.FSharp.Core.int<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; = int<br /><br />Full name: Microsoft.FSharp.Core.int&lt;_&gt;</div>
+<div class="tip" id="fs35">Vector2d.y: int</div>
+<div class="tip" id="fs36">Multiple items<br />type Vector2dSerializer =<br />&#160;&#160;interface ISerializer&lt;Vector2d&gt;<br />&#160;&#160;new : unit -&gt; Vector2dSerializer<br /><br />Full name: CustomSerializer.Vector2dSerializer<br /><br />--------------------<br />new : unit -&gt; Vector2dSerializer</div>
+<div class="tip" id="fs37">Multiple items<br />type ISerializer =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;abstract member Deserialize : ISerializerResolver -&gt; InfoSet -&gt; obj<br />&#160;&#160;&#160;&#160;abstract member Serialize : ISerializerResolver -&gt; obj -&gt; InfoSet<br />&#160;&#160;&#160;&#160;abstract member Type : Type<br />&#160;&#160;&#160;&#160;abstract member TypeId : string<br />&#160;&#160;end<br /><br />Full name: Angara.Serialization.ISerializer<br /><br />--------------------<br />type ISerializer&lt;&#39;T&gt; =<br />&#160;&#160;interface<br />&#160;&#160;&#160;&#160;abstract member Deserialize : ISerializerResolver -&gt; InfoSet -&gt; &#39;T<br />&#160;&#160;&#160;&#160;abstract member Serialize : ISerializerResolver -&gt; &#39;T -&gt; InfoSet<br />&#160;&#160;&#160;&#160;abstract member TypeId : string<br />&#160;&#160;end<br /><br />Full name: Angara.Serialization.ISerializer&lt;_&gt;</div>
+<div class="tip" id="fs38">val x : Vector2dSerializer</div>
+<div class="tip" id="fs39">Multiple items<br />override Vector2dSerializer.TypeId : string<br /><br />Full name: CustomSerializer.Vector2dSerializer.TypeId<br /><br />--------------------<br />type TypeId =<br />&#160;&#160;| Simple of string<br />&#160;&#160;| Generic of string * TypeId list<br />&#160;&#160;override ToString : unit -&gt; string<br />&#160;&#160;static member MakeArray : itemTypeId:string -&gt; string<br />&#160;&#160;static member MakeList : itemTypeId:string -&gt; string<br />&#160;&#160;static member MakeOption : itemTypeId:string -&gt; string<br />&#160;&#160;static member ToString : typeId:string * argIds:seq&lt;string&gt; -&gt; string<br />&#160;&#160;static member TryParse : s:string -&gt; TypeId option<br /><br />Full name: Angara.Serialization.TypeId</div>
+<div class="tip" id="fs40">override Vector2dSerializer.Serialize : ISerializerResolver -&gt; v:Vector2d -&gt; InfoSet<br /><br />Full name: CustomSerializer.Vector2dSerializer.Serialize</div>
+<div class="tip" id="fs41">val v : Vector2d</div>
+<div class="tip" id="fs42">type InfoSet =<br />&#160;&#160;| Artefact of string * InfoSet<br />&#160;&#160;| Seq of seq&lt;InfoSet&gt;<br />&#160;&#160;| Map of Map&lt;string,InfoSet&gt;<br />&#160;&#160;| Null<br />&#160;&#160;| String of string<br />&#160;&#160;| Int of int<br />&#160;&#160;| UInt of UInt32<br />&#160;&#160;| Int64 of Int64<br />&#160;&#160;| UInt64 of UInt64<br />&#160;&#160;| Decimal of decimal<br />&#160;&#160;...<br />&#160;&#160;member AddBlob : key:string * suffix:string * blob:IBlob -&gt; InfoSet<br />&#160;&#160;member AddBool : key:string * b:bool -&gt; InfoSet<br />&#160;&#160;member AddDateTime : key:string * d:DateTime -&gt; InfoSet<br />&#160;&#160;member AddDecimal : key:string * d:decimal -&gt; InfoSet<br />&#160;&#160;member AddDouble : key:string * d:double -&gt; InfoSet<br />&#160;&#160;member AddGuid : key:string * g:Guid -&gt; InfoSet<br />&#160;&#160;member AddInfoSet : key:string * v:InfoSet -&gt; InfoSet<br />&#160;&#160;member AddInt : key:string * i:int -&gt; InfoSet<br />&#160;&#160;member AddInt64 : key:string * i:Int64 -&gt; InfoSet<br />&#160;&#160;member AddNull : key:string -&gt; InfoSet<br />&#160;&#160;member AddSeq : key:string * s:seq&lt;InfoSet&gt; -&gt; InfoSet<br />&#160;&#160;member AddString : key:string * s:string -&gt; InfoSet<br />&#160;&#160;member AddUInt : key:string * i:UInt32 -&gt; InfoSet<br />&#160;&#160;member AddUInt64 : key:string * i:UInt64 -&gt; InfoSet<br />&#160;&#160;member ToBlob : unit -&gt; string * IBlob<br />&#160;&#160;member ToBool : unit -&gt; bool<br />&#160;&#160;member ToBoolArray : unit -&gt; bool []<br />&#160;&#160;member ToByteArray : unit -&gt; byte []<br />&#160;&#160;member ToDateTime : unit -&gt; DateTime<br />&#160;&#160;member ToDateTimeArray : unit -&gt; DateTime []<br />&#160;&#160;member ToDecimal : unit -&gt; decimal<br />&#160;&#160;member ToDecimalArray : unit -&gt; Decimal []<br />&#160;&#160;member ToDouble : unit -&gt; float<br />&#160;&#160;member ToDoubleArray : unit -&gt; double []<br />&#160;&#160;member ToGuid : unit -&gt; Guid<br />&#160;&#160;member ToInt : unit -&gt; int<br />&#160;&#160;member ToInt64 : unit -&gt; Int64<br />&#160;&#160;member ToInt64Array : unit -&gt; Int64 []<br />&#160;&#160;member ToIntArray : unit -&gt; int []<br />&#160;&#160;member ToMap : unit -&gt; Map&lt;string,InfoSet&gt;<br />&#160;&#160;member ToNamespace : unit -&gt; string list * InfoSet<br />&#160;&#160;member ToPair : unit -&gt; string * InfoSet<br />&#160;&#160;member ToSeq : unit -&gt; seq&lt;InfoSet&gt;<br />&#160;&#160;member ToStringArray : unit -&gt; string []<br />&#160;&#160;member ToStringValue : unit -&gt; string<br />&#160;&#160;member ToUInt : unit -&gt; UInt32<br />&#160;&#160;member ToUInt64 : unit -&gt; UInt64<br />&#160;&#160;member ToUInt64Array : unit -&gt; UInt64 []<br />&#160;&#160;member ToUIntArray : unit -&gt; UInt32 []<br />&#160;&#160;static member EmptyMap : InfoSet<br />&#160;&#160;static member ofPairs : pairs:seq&lt;string * InfoSet&gt; -&gt; InfoSet<br />&#160;&#160;static member toMap : si:InfoSet -&gt; Map&lt;string,InfoSet&gt;<br />&#160;&#160;static member tryGetByteArray : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; byte [] option<br />&#160;&#160;static member tryGetInt : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; int option<br />&#160;&#160;static member tryGetIntArray : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; int [] option<br />&#160;&#160;static member tryGetMap : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; Map&lt;string,InfoSet&gt; option<br />&#160;&#160;static member tryGetSeq : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; seq&lt;InfoSet&gt; option<br />&#160;&#160;static member tryGetString : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; string option<br />&#160;&#160;static member tryGetStringArray : key:string -&gt; map:Map&lt;string,InfoSet&gt; -&gt; string [] option<br /><br />Full name: Angara.Serialization.InfoSet</div>
+<div class="tip" id="fs43">property InfoSet.EmptyMap: InfoSet</div>
+<div class="tip" id="fs44">member InfoSet.AddInt : key:string * i:int -&gt; InfoSet</div>
+<div class="tip" id="fs45">override Vector2dSerializer.Deserialize : ISerializerResolver -&gt; i:InfoSet -&gt; Vector2d<br /><br />Full name: CustomSerializer.Vector2dSerializer.Deserialize</div>
+<div class="tip" id="fs46">val i : InfoSet</div>
+<div class="tip" id="fs47">val map : Map&lt;string,InfoSet&gt;</div>
+<div class="tip" id="fs48">static member InfoSet.toMap : si:InfoSet -&gt; Map&lt;string,InfoSet&gt;</div>
+<div class="tip" id="fs49">val lib : ISerializerLibrary<br /><br />Full name: CustomSerializer.lib</div>
+<div class="tip" id="fs50">Multiple items<br />type SerializerLibrary =<br />&#160;&#160;interface ISerializerLibrary<br />&#160;&#160;new : name:string -&gt; SerializerLibrary<br />&#160;&#160;static member CreateDefault : unit -&gt; ISerializerLibrary<br />&#160;&#160;static member CreateEmpty : unit -&gt; ISerializerLibrary<br /><br />Full name: Angara.Serialization.SerializerLibrary<br /><br />--------------------<br />new : name:string -&gt; SerializerLibrary</div>
+<div class="tip" id="fs51">static member SerializerLibrary.CreateDefault : unit -&gt; ISerializerLibrary</div>
+<div class="tip" id="fs52">abstract member ISerializerLibrary.Register : ISerializer&lt;&#39;a&gt; -&gt; unit</div>
+<div class="tip" id="fs53">val v : Vector2d<br /><br />Full name: CustomSerializer.v</div>
+<div class="tip" id="fs54">val vjson : Newtonsoft.Json.Linq.JToken<br /><br />Full name: CustomSerializer.vjson</div>
+<div class="tip" id="fs55">static member Json.FromObject : resolver:ISerializerResolver * a:&#39;a0 -&gt; Newtonsoft.Json.Linq.JToken<br />static member Json.FromObject : resolver:ISerializerResolver * a:&#39;a0 * writer:IBlobWriter -&gt; Newtonsoft.Json.Linq.JToken</div>
+<div class="tip" id="fs56">val v&#39; : Vector2d<br /><br />Full name: CustomSerializer.v&#39;</div>
+
+        </div>
+        <div class="span3">
+          <!--<a href="./index.html">
+            <img src="./images/logo.png" style="width:140px;height:140px;margin:10px 0px 0px 35px;border-style:none;" />
+          </a>-->
+
+          <ul class="nav nav-list" id="menu">
+
+            <li class="nav-header">Angara.Serialization</li>
+
+            <li class="divider"></li>
+
+            <li><a href="https://www.nuget.org/packages?q=Angara.Serialization">Get libraries via NuGet</a></li>
+            <li><a href="https://github.com/Microsoft/Angara.Serialization">Source Code on GitHub</a></li>
+            <li><a href="https://github.com/Microsoft/Angara.Serialization/blob/master/LICENSE">License</a></li>
+            <!--<li><a href="https://github.com/Microsoft/Angara.Serialization/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+            <li><a href="https://github.com/Microsoft/Angara.Serialization/blob/master/CONTRIBUTING.md">Contributing to Angara.Serialization</a></li>-->
+
+            <!--<li class="nav-header">Documentation</li>
+
+            <li><a href="./index.html">Introduction</a></li>
+
+            <li class="divider"></li>
+
+            <li><a href="./feature1.html">Feature 1</a></li>
+            <li><a href="./feature2.html">Feature 2</a></li>
+
+            <li class="divider"></li>
+
+            <li><a href="./feature3.html">Feature 3</a></li>
+            <li><a href="./feature4.html">Feature 4</a></li> -->
+
+            <li class="nav-header">Tutorials</li>
+
+            <li><a href="./CustomSerializer.html">Serializing user-defined type</a></li>
+            <!--<li><a href="./tutorial2.html">Tutorial 2</a></li>
+
+            <li class="nav-header">Reference</li>
+
+            <li><a href="./reference/index.html">API Reference</a></li>-->
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a href="https://github.com/Microsoft/Angara.Serialization"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+  </body>
+  </html>
