@@ -43,7 +43,7 @@ printfn "Current directory is %s" (Directory.GetCurrentDirectory())
 
 let fsi = FsiEvaluator()
 for f in 
-    [ src "serialization.fsx" 
+    [ src "index.fsx" 
     ; src "CustomSerializer.fsx" ] 
     do
     if File.Exists f then
@@ -51,7 +51,8 @@ for f in
         Literate.ProcessScriptFile(f, 
                                    docTemplate, 
                                    Path.ChangeExtension(output f, "html"), 
-                                   fsiEvaluator=fsi, 
+                                   fsiEvaluator = fsi, 
+                                   lineNumbers = false,
                                    replacements = info,
                                    layoutRoots = [ Path.Combine(__SOURCE_DIRECTORY__, "../templates") ])
     else printfn "No such file: %s" f
